@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="pixi.js"></script>
+    <script src="index.js"></script>
+    <title>Cannon</title>
+</head>
+
+<body>
+    <script>
+        const gameOptions = {
+            board: {
+                size: {
+                    cols: 9,
+                    rows: 9
+                },
+                margin: {
+                    x: 1,
+                    y: 1
+                }
+            },
+            tile: {
+                size: {
+                    width: 20,
+                    height: 20
+                }
+            },
+            snake: {
+                length: 4
+            },
+            apples: {
+                count: 4
+            },
+            timer: {
+                start: 500,
+                increment: 100
+            }
+        }
+        document.addEventListener("DOMContentLoaded", () => App.create(gameOptions))
+    </script>
+</body>
+
+</html>

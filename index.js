@@ -154,7 +154,10 @@ class App {
   }
 
   start() {
+    this.gameover.hide()
+    this.controls.reset()
     this.started = true
+    this.board.reset()
     Utils.setDynamicInterval(() => {
       this.board.find(SnakeHead).move(this.controls.dir)
       this.controls.lastMove = this.controls.dir
@@ -163,8 +166,14 @@ class App {
   }
 
   gameOver() {
-    this.gameover.visible = true
+    this.gameover.show()
     this.started = false
+    const key = Utils.keyboard(" ")
+    key.press = () => {
+      console.log(1)
+      this.start()
+      key.unsubscribe()
+    }
   }
 }
 
@@ -197,13 +206,16 @@ class Board extends PIXI.Container {
     this.app = app
     this.rows = rows
     this.cols = cols
+
+    this.app.app.stage.addChild(this)
+  }
+
+  reset() {
     this.tiles = null
 
     this.initTiles()
     this.initSnake()
     this.initApples()
-
-    this.app.app.stage.addChild(this)
   }
 
   initTiles() {
@@ -278,10 +290,18 @@ class GameOver extends PIXI.Text {
     this.style.fill = 0xff1010
     this.style.align = 'center'
 
-    this.text = 'Game over!'
     this.visible = false
-
+    
     this.app.app.stage.addChild(this)
+  }
+  
+  show() {
+    this.visible = true
+    this.text = `Game over!\nYour score is: ${this.app.metrics.score}\nPress Space to restart`
+  }
+
+  hide() {
+    this.visible = false
   }
 }
 
@@ -311,13 +331,18 @@ class UI extends PIXI.Text {
 class Controls {
   constructor(app) {
     this.app = app
-    this.dir = DIRECTIONS.UP
-    this.lastMove = DIRECTIONS.UP
+
+    this.reset()
 
     Utils.keyboard("ArrowLeft").press = () => this.look(DIRECTIONS.LEFT)
     Utils.keyboard("ArrowUp").press = () => this.look(DIRECTIONS.UP)
     Utils.keyboard("ArrowRight").press = () => this.look(DIRECTIONS.RIGHT)
     Utils.keyboard("ArrowDown").press = () => this.look(DIRECTIONS.DOWN)
+  }
+
+  reset() {
+    this.dir = DIRECTIONS.UP
+    this.lastMove = DIRECTIONS.UP
   }
 
   look(dir) {
@@ -395,8 +420,8 @@ class SnakeHead extends Snake {
       [DIRECTIONS.LEFT]: {dx: -1, dy: 0}
     }[dir]
     
-    const y = Utils.loop(this.yPos, dy, 0, this.board.app.options.board.size.cols - 1)
-    const x = Utils.loop(this.xPos, dx, 0, this.board.app.options.board.size.rows - 1)
+    const y = Utils.loop(this.yPos, dy, 0, this.board.app.options.board.size.rows - 1)
+    const x = Utils.loop(this.xPos, dx, 0, this.board.app.options.board.size.cols - 1)
 
     if(this.board.tiles[y][x].role === ROLES.SNAKE) {
       this.board.app.gameOver()

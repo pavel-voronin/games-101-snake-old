@@ -1,7 +1,7 @@
 class Utils {
   static setDynamicInterval(fn, intervalFn, exitFn) {
     setTimeout(() => {
-      if(exitFn()) {
+      if (exitFn()) {
         return
       }
       fn()
@@ -12,9 +12,9 @@ class Utils {
   static loop(v, step, min, max) {
     v += step % (max - min + 1)
 
-    if(v < min) {
+    if (v < min) {
       return max - (min - v - 1)
-    } else if(v > max) {
+    } else if (v > max) {
       return min + (max - v + 1)
     }
 
@@ -99,7 +99,7 @@ const ROLE_TEXTURES = {
   [ROLES.SNAKE]: PIXI.Texture.from(Utils.pixel(255, 255, 0)),
   [ROLES.FIELD]: PIXI.Texture.from(Utils.pixel(0, 0, 0)),
   [ROLES.APPLE]: PIXI.Texture.from(Utils.pixel(255, 0, 0)),
-  [ROLES.HEAD]:  PIXI.Texture.from(Utils.pixel(200, 200, 0))
+  [ROLES.HEAD]: PIXI.Texture.from(Utils.pixel(200, 200, 0))
 }
 
 class App {
@@ -136,7 +136,10 @@ class App {
   }
 
   initBoard() {
-    const {rows, cols} = this.options.board.size
+    const {
+      rows,
+      cols
+    } = this.options.board.size
     this.board = new Board(this, rows, cols)
   }
 
@@ -237,11 +240,11 @@ class Board extends PIXI.Container {
   initApples() {
     let remain = this.app.options.apples.count
 
-    while(remain) {
+    while (remain) {
       const x = ~~(Math.random() * this.cols)
       const y = ~~(Math.random() * this.rows)
 
-      if(this.tiles[y][x].role !== ROLES.FIELD) {
+      if (this.tiles[y][x].role !== ROLES.FIELD) {
         continue
       }
 
@@ -251,11 +254,11 @@ class Board extends PIXI.Container {
   }
 
   dropApple() {
-    while(1) {
+    while (1) {
       const x = ~~(Math.random() * this.cols)
       const y = ~~(Math.random() * this.rows)
 
-      if(this.tiles[y][x].role !== ROLES.FIELD) {
+      if (this.tiles[y][x].role !== ROLES.FIELD) {
         continue
       }
 
@@ -265,9 +268,9 @@ class Board extends PIXI.Container {
   }
 
   find(ofRole) {
-    for(let row of this.tiles) {
-      for(let tile of row) {
-        if(tile.constructor === ofRole) {
+    for (let row of this.tiles) {
+      for (let tile of row) {
+        if (tile.constructor === ofRole) {
           return tile
         }
       }
@@ -284,17 +287,17 @@ class GameOver extends PIXI.Text {
     this.x = this.app.app.screen.width / 2
     this.y = this.app.app.screen.height / 2
     this.anchor.set(0.5)
-    
+
     this.style.fontFamily = 'Arial'
     this.style.fontSize = 48
     this.style.fill = 0xff1010
     this.style.align = 'center'
 
     this.visible = false
-    
+
     this.app.app.stage.addChild(this)
   }
-  
+
   show() {
     this.visible = true
     this.text = `Game over!\nYour score is: ${this.app.metrics.score}\nPress Space to restart`
@@ -348,7 +351,7 @@ class Controls {
   look(dir) {
     this.dir = this.lastMove
 
-    if(this.dir === DIRECTIONS.UP && dir !== DIRECTIONS.DOWN) { 
+    if (this.dir === DIRECTIONS.UP && dir !== DIRECTIONS.DOWN) {
       this.dir = dir
     } else if (this.dir === DIRECTIONS.LEFT && dir !== DIRECTIONS.RIGHT) {
       this.dir = dir
@@ -369,10 +372,10 @@ class Tile extends PIXI.Sprite {
     this.yPos = y
     this.role = role
     this.update()
-    
+
     this.x = this.xPos * (this.board.app.options.tile.size.width + this.board.app.options.board.margin.x)
     this.y = this.yPos * (this.board.app.options.tile.size.height + this.board.app.options.board.margin.y)
-    
+
     this.scale.x = this.board.app.options.tile.size.width
     this.scale.y = this.board.app.options.tile.size.height
 
@@ -385,7 +388,7 @@ class Tile extends PIXI.Sprite {
   }
 
   update() {
-      this.texture = ROLE_TEXTURES[this.role]
+    this.texture = ROLE_TEXTURES[this.role]
   }
 }
 
@@ -399,7 +402,7 @@ class Snake extends Tile {
   get tail() {
     let pointer = this
 
-    while(pointer.next) {
+    while (pointer.next) {
       pointer = pointer.next
     }
 
@@ -413,50 +416,65 @@ class SnakeHead extends Snake {
   }
 
   move(dir) {
-    const {dx, dy} = {
-      [DIRECTIONS.UP]: {dx: 0, dy: -1},
-      [DIRECTIONS.RIGHT]: {dx: 1, dy: 0},
-      [DIRECTIONS.DOWN]: {dx: 0, dy: 1},
-      [DIRECTIONS.LEFT]: {dx: -1, dy: 0}
-    }[dir]
-    
+    const {
+      dx,
+      dy
+    } = {
+      [DIRECTIONS.UP]: {
+        dx: 0,
+        dy: -1
+      },
+      [DIRECTIONS.RIGHT]: {
+        dx: 1,
+        dy: 0
+      },
+      [DIRECTIONS.DOWN]: {
+        dx: 0,
+        dy: 1
+      },
+      [DIRECTIONS.LEFT]: {
+        dx: -1,
+        dy: 0
+      }
+    } [dir]
+
     const y = Utils.loop(this.yPos, dy, 0, this.board.app.options.board.size.rows - 1)
     const x = Utils.loop(this.xPos, dx, 0, this.board.app.options.board.size.cols - 1)
 
-    if(this.board.tiles[y][x].role === ROLES.SNAKE) {
+    if (this.board.tiles[y][x].role === ROLES.SNAKE) {
       this.board.app.gameOver()
       return
-    } else if(this.board.tiles[y][x].role === ROLES.APPLE) {
+    } else if (this.board.tiles[y][x].role === ROLES.APPLE) {
       this.board.dropApple()
       this.board.app.metrics.eat()
 
       this.board.tiles[y][x].makeIt(SnakeHead)
       const newHead = this.board.tiles[y][x]
-      
+
       const xPos = this.xPos
       const yPos = this.yPos
       const body = this.next
-      
+
       this.makeIt(Snake)
       const oldHead = this.board.tiles[yPos][xPos]
-      
+
       newHead.next = oldHead
       oldHead.next = body
     } else {
       this.board.tiles[y][x].makeIt(SnakeHead)
       const newHead = this.board.tiles[y][x]
-      
+
       const xPos = this.xPos
       const yPos = this.yPos
       const body = this.next
-      
+
       this.makeIt(Snake)
       const oldHead = this.board.tiles[yPos][xPos]
-      
+
       newHead.next = oldHead
       oldHead.next = body
       let p = body
-      while(p.next.next) {
+      while (p.next.next) {
         p = p.next
       }
       oldHead.tail.makeIt(Tile)

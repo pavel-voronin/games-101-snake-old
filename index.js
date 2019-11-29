@@ -1,4 +1,14 @@
 class Utils {
+  static setDynamicInterval(fn, intervalFn, exitFn) {
+    setTimeout(() => {
+      if(exitFn()) {
+        return
+      }
+      fn()
+      this.setDynamicInterval(fn, intervalFn, exitFn)
+    }, intervalFn())
+  }
+
   static loop(v, step, min, max) {
     v += step % (max - min + 1)
 
@@ -103,11 +113,13 @@ class App {
     this.app = null
     this.board = null
     this.controls = null
-    this.score = null
+    this.started = false
+    this.metrics = null
 
     this.initApp()
     this.initBoard()
     this.initControls()
+    this.initMetrics()
     this.initUI()
 
     this.start()
@@ -133,20 +145,48 @@ class App {
   }
 
   initUI() {
-    this.score = new Score(this)
+    this.ui = new UI(this)
     this.gameover = new GameOver(this)
   }
 
+  initMetrics() {
+    this.metrics = new Metrics(this)
+  }
+
   start() {
-    this.timer = setInterval(() => {
+    this.started = true
+    Utils.setDynamicInterval(() => {
       this.board.find(SnakeHead).move(this.controls.dir)
       this.controls.lastMove = this.controls.dir
-    }, this.options.timer.start)
+      this.ui.update()
+    }, () => this.metrics.speed(), () => !this.started)
   }
 
   gameOver() {
-    clearInterval(this.timer)
     this.gameover.visible = true
+    this.started = false
+  }
+}
+
+class Metrics {
+  constructor(app) {
+    this.app = app
+
+    this.score = 0
+    this.ate = 0
+    this.cost = 1
+  }
+
+  eat() {
+    this.ate++
+    this.cost = ~~(this.ate / this.app.options.timer.every) + 1
+    this.score += this.cost
+  }
+
+  speed() {
+    const options = this.app.options.timer
+
+    return options.start - options.step * ~~(this.ate / options.every)
   }
 }
 
@@ -245,13 +285,12 @@ class GameOver extends PIXI.Text {
   }
 }
 
-class Score extends PIXI.Text {
+class UI extends PIXI.Text {
   constructor(app) {
     super()
 
     this.app = app
 
-    this.reset()
     this.update()
 
     this.x = this.app.app.screen.width - 100
@@ -264,18 +303,8 @@ class Score extends PIXI.Text {
     this.app.app.stage.addChild(this)
   }
 
-  plus(v) {
-    this.score += v
-    this.update()
-  }
-
-  reset() {
-    this.score = 0
-    this.update()
-  }
-
   update() {
-    this.text = this.score
+    this.text = `Score: ${this.app.metrics.score}\nAte: ${this.app.metrics.ate}`
   }
 }
 
@@ -373,8 +402,8 @@ class SnakeHead extends Snake {
       this.board.app.gameOver()
       return
     } else if(this.board.tiles[y][x].role === ROLES.APPLE) {
-      this.board.app.score.plus(1)
       this.board.dropApple()
+      this.board.app.metrics.eat()
 
       this.board.tiles[y][x].makeIt(SnakeHead)
       const newHead = this.board.tiles[y][x]
@@ -410,7 +439,6 @@ class SnakeHead extends Snake {
     }
   }
 }
-
 
 class Apple extends Tile {
   constructor(board, x, y, role = ROLES.APPLE) {
